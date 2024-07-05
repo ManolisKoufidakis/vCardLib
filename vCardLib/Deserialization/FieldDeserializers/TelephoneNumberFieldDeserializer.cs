@@ -28,23 +28,22 @@ internal sealed class TelephoneNumberFieldDeserializer : IV2FieldDeserializer<Te
         {
             var (key, data) = DataSplitHelpers.SplitDatum(datum, '=');
 
-            if (key.EqualsIgnoreCase(FieldKeyConstants.TypeKey))
+            if (key.EqualsIgnoreCase(FieldKeyConstants.PreferenceKey))
             {
-                if (string.IsNullOrWhiteSpace(data))
-                    continue;
-
-                var typeGroup = data!.Split(',');
-
-                foreach (var individualType in typeGroup)
-                {
-                    var phoneType = individualType.ParseTelephoneNumberType();
-
-                    if (phoneType.HasValue)
-                        type = type.HasValue ? type.Value | phoneType : phoneType;
-                }
-            }
-            else if (key.EqualsIgnoreCase(FieldKeyConstants.PreferenceKey))
                 preference = 1;
+                continue;
+            }
+
+            var phoneTypes = key.EqualsIgnoreCase(FieldKeyConstants.TypeKey) && data != null
+                ? data.Split(',')
+                : key != null && data == null
+                    ? key.Split(';')
+                    : null;
+
+            type = phoneTypes?
+                .Select(parsedType => parsedType.ParseTelephoneNumberType())
+                .Where(parsedType => parsedType != null)
+                .Aggregate(type, (current, phoneType) => current.HasValue ? current.Value | phoneType : phoneType);
         }
 
         return new TelephoneNumber(telephoneNumber, type, extension, preference);
@@ -66,26 +65,29 @@ internal sealed class TelephoneNumberFieldDeserializer : IV2FieldDeserializer<Te
         {
             var (key, data) = DataSplitHelpers.SplitDatum(datum, '=');
 
-            if (key.EqualsIgnoreCase(FieldKeyConstants.TypeKey))
+            if (key.EqualsIgnoreCase(FieldKeyConstants.PreferenceKey))
             {
-                if (string.IsNullOrWhiteSpace(data))
-                    continue;
-
-                var typeGroup = data!.Split(',');
-
-                foreach (var individualType in typeGroup)
-                {
-                    var phoneType = individualType.ParseTelephoneNumberType();
-
-                    if (phoneType.HasValue)
-                        type = type.HasValue ? type.Value | phoneType : phoneType;
-                }
-            }
-            else if (key.EqualsIgnoreCase(FieldKeyConstants.ValueKey))
-                _value = data;
-            else if (key.EqualsIgnoreCase(FieldKeyConstants.PreferenceKey))
                 if (!string.IsNullOrWhiteSpace(data) && int.TryParse(data, out var pref))
                     preference = pref;
+                continue;
+            }
+
+            if (key.EqualsIgnoreCase(FieldKeyConstants.ValueKey))
+            {
+                _value = data;
+                continue;
+            }
+
+            var phoneTypes = key.EqualsIgnoreCase(FieldKeyConstants.TypeKey) && data != null
+                ? data.Split(',')
+                : key != null && data == null
+                    ? key.Split(';')
+                    : null;
+
+            type = phoneTypes?
+                .Select(parsedType => parsedType.ParseTelephoneNumberType())
+                .Where(parsedType => parsedType != null)
+                .Aggregate(type, (current, phoneType) => current.HasValue ? current.Value | phoneType : phoneType);
         }
 
         return new TelephoneNumber(telephoneNumber, type, extension, preference, _value);
