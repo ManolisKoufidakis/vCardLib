@@ -13,7 +13,7 @@ internal sealed class EmailAddressFieldDeserializer : IV2FieldDeserializer<Email
 {
     public static string FieldKey => "EMAIL";
 
-    public EmailAddress Read(string input)
+    public EmailAddress Read(string input) 
     {
         var (metadata, value) = DataSplitHelpers.SplitLine(FieldKey, input);
 
@@ -23,26 +23,32 @@ internal sealed class EmailAddressFieldDeserializer : IV2FieldDeserializer<Email
         EmailAddressType? type = null;
         int? preference = null;
 
-        foreach (var datum in metadata)
+        foreach (var datum in metadata) 
         {
             var (key, data) = DataSplitHelpers.SplitDatum(datum, '=');
 
-            if (key.EqualsIgnoreCase(FieldKeyConstants.TypeKey) && data != null)
+            if (key.EqualsIgnoreCase(FieldKeyConstants.PreferenceKey)) 
             {
-                var emailTypes = data.Split(',');
-
-                type = emailTypes
-                    .Select(parsedType => parsedType.ParseEmailAddressType())
-                    .Aggregate(type, (current, emailType) => current.HasValue ? current.Value | emailType : emailType);
-            }
-            else if (key.EqualsIgnoreCase(FieldKeyConstants.PreferenceKey))
                 preference = 1;
+                continue;
+            }
+
+            var emailTypes = key.EqualsIgnoreCase(FieldKeyConstants.TypeKey) && data != null
+                ? data.Split(',')
+                : key != null && data == null
+                    ? key.Split(';')
+                    : null;
+
+            type = emailTypes?
+                .Select(parsedType => parsedType.ParseEmailAddressType())
+                .Where(parsedType => parsedType != null)
+                .Aggregate(type, (current, emailType) => current.HasValue ? current.Value | emailType : emailType);
         }
 
         return new EmailAddress(value, type, preference);
     }
 
-    EmailAddress IV4FieldDeserializer<EmailAddress>.Read(string input)
+    EmailAddress IV4FieldDeserializer<EmailAddress>.Read(string input) 
     {
         var (metadata, value) = DataSplitHelpers.SplitLine(FieldKey, input);
 
@@ -52,21 +58,27 @@ internal sealed class EmailAddressFieldDeserializer : IV2FieldDeserializer<Email
         EmailAddressType? type = null;
         int? preference = null;
 
-        foreach (var datum in metadata)
+        foreach (var datum in metadata) 
         {
             var (key, data) = DataSplitHelpers.SplitDatum(datum, '=');
 
-            if (key.EqualsIgnoreCase(FieldKeyConstants.TypeKey) && data != null)
+            if (key.EqualsIgnoreCase(FieldKeyConstants.PreferenceKey)) 
             {
-                var emailTypes = data.Split(',');
-
-                type = emailTypes
-                    .Select(parsedType => parsedType.ParseEmailAddressType())
-                    .Aggregate(type, (current, emailType) => current.HasValue ? current.Value | emailType : emailType);
-            }
-            else if (key.EqualsIgnoreCase(FieldKeyConstants.PreferenceKey))
                 if (!string.IsNullOrWhiteSpace(data) && int.TryParse(data, out var pref))
                     preference = pref;
+                continue;
+            }
+
+            var emailTypes = key.EqualsIgnoreCase(FieldKeyConstants.TypeKey) && data != null
+                ? data.Split(',')
+                : key != null && data == null
+                    ? key.Split(';')
+                    : null;
+
+            type = emailTypes?
+                .Select(parsedType => parsedType.ParseEmailAddressType())
+                .Where(parsedType => parsedType != null)
+                .Aggregate(type, (current, emailType) => current.HasValue ? current.Value | emailType : emailType);
         }
 
         return new EmailAddress(value, type, preference);

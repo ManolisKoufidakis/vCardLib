@@ -23,9 +23,57 @@ public class EmailAddressFieldDeserializerTests
     }
 
     [Test]
+    public void V2ShouldParseWhenTypeKeywordIsOmittedForMetadata()
+    {
+        const string input = "EMAIL;WORK:johnDoe@example.org";
+        IV2FieldDeserializer<EmailAddress> deserializer = new EmailAddressFieldDeserializer();
+        var result = deserializer.Read(input);
+
+        result.Preference.ShouldBeNull();
+        result.Type.ShouldBe(EmailAddressType.Work);
+        result.Value.ShouldBe("johnDoe@example.org");
+    }
+
+    [Test]
+    public void V2ShouldParsePrefWhenTypeKeywordIsOmittedForMetadata()
+    {
+        const string input = "EMAIL;WORK;PREF:johnDoe@example.org";
+        IV2FieldDeserializer<EmailAddress> deserializer = new EmailAddressFieldDeserializer();
+        var result = deserializer.Read(input);
+
+        result.Preference.ShouldBe(1);
+        result.Type.ShouldBe(EmailAddressType.Work);
+        result.Value.ShouldBe("johnDoe@example.org");
+    }
+
+    [Test]
+    public void V2ShouldParsePrefWhenTypeKeywordIsOmittedForMetadataAndHasMultipleTypes()
+    {
+        const string input = "EMAIL;INTERNET;WORK:johnDoe@example.org";
+        IV2FieldDeserializer<EmailAddress> deserializer = new EmailAddressFieldDeserializer();
+        var result = deserializer.Read(input);
+
+        result.Preference.ShouldBeNull();
+        result.Type.ShouldBe(EmailAddressType.Internet | EmailAddressType.Work);
+        result.Value.ShouldBe("johnDoe@example.org");
+    }
+
+    [Test]
     public void V3ShouldParseComplex()
     {
         const string input = @"EMAIL;type=INTERNET;type=WORK;pref:johnDoe@example.org";
+        IV3FieldDeserializer<EmailAddress> deserializer = new EmailAddressFieldDeserializer();
+        var result = deserializer.Read(input);
+
+        result.Preference.ShouldBe(1);
+        result.Type.ShouldBe(EmailAddressType.Internet | EmailAddressType.Work);
+        result.Value.ShouldBe("johnDoe@example.org");
+    }
+
+    [Test]
+    public void V3ShouldParseComplexCommaSeparated()
+    {
+        const string input = @"EMAIL;type=INTERNET,WORK;pref:johnDoe@example.org";
         IV3FieldDeserializer<EmailAddress> deserializer = new EmailAddressFieldDeserializer();
         var result = deserializer.Read(input);
 
@@ -43,6 +91,42 @@ public class EmailAddressFieldDeserializerTests
 
         result.Preference.ShouldBe(1);
         result.Type.ShouldBe(EmailAddressType.Aol | EmailAddressType.Home);
+        result.Value.ShouldBe("johnDoe@example.org");
+    }
+
+    [Test]
+    public void V4ShouldParseWhenTypeKeywordIsOmittedForMetadata()
+    {
+        const string input = "EMAIL;WORK:johnDoe@example.org";
+        IV4FieldDeserializer<EmailAddress> deserializer = new EmailAddressFieldDeserializer();
+        var result = deserializer.Read(input);
+
+        result.Preference.ShouldBeNull();
+        result.Type.ShouldBe(EmailAddressType.Work);
+        result.Value.ShouldBe("johnDoe@example.org");
+    }
+
+    [Test]
+    public void V4ShouldParsePrefWhenTypeKeywordIsOmittedForMetadata()
+    {
+        const string input = "EMAIL;WORK;PREF=1:johnDoe@example.org";
+        IV4FieldDeserializer<EmailAddress> deserializer = new EmailAddressFieldDeserializer();
+        var result = deserializer.Read(input);
+
+        result.Preference.ShouldBe(1);
+        result.Type.ShouldBe(EmailAddressType.Work);
+        result.Value.ShouldBe("johnDoe@example.org");
+    }
+
+    [Test]
+    public void V4ShouldParsePrefWhenTypeKeywordIsOmittedForMetadataAndHasMultipleTypes()
+    {
+        const string input = "EMAIL;INTERNET;WORK:johnDoe@example.org";
+        IV4FieldDeserializer<EmailAddress> deserializer = new EmailAddressFieldDeserializer();
+        var result = deserializer.Read(input);
+
+        result.Preference.ShouldBeNull();
+        result.Type.ShouldBe(EmailAddressType.Internet | EmailAddressType.Work);
         result.Value.ShouldBe("johnDoe@example.org");
     }
 }
