@@ -1,5 +1,5 @@
-﻿using vCardLib.Constants;
-using vCardLib.Deserialization.Interfaces;
+﻿using vCardLib.Deserialization.Interfaces;
+using vCardLib.Deserialization.Utilities;
 
 namespace vCardLib.Deserialization.FieldDeserializers;
 
@@ -8,9 +8,8 @@ internal sealed class UrlFieldDeserializer : IV2FieldDeserializer<string>, IV3Fi
 {
     public static string FieldKey => "URL";
 
-    public string Read(string input)
-    {
-        var replaceTarget = $"{FieldKey}{FieldKeyConstants.SectionDelimiter}";
-        return input.Replace(replaceTarget, string.Empty).Trim();
+    public string Read(string input) {
+        var (metadata, value) = DataSplitHelpers.SplitLine(FieldKey, input);
+        return value;
     }
 }
